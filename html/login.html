@@ -1,0 +1,37 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+  <head>
+    <link rel="stylesheet" href="/portal/style/main.css" type="text/css" media="print, screen"/>
+    <link rel="stylesheet" href="/portal/style/superfish.css" type="text/css" media="print, screen"/>
+    <script type="text/javascript" src="/portal/js/jquery-1.7.min.js"></script>
+    <script type="text/javascript" src="/portal/js/jquery.ba-hashchange.min.js"></script>
+    <script type="text/javascript" src="/portal/js/superfish.min.js"></script>
+    <script type="text/javascript">
+
+      function getPageToForward() {
+        return window.location.search.substring(8);
+      }
+
+      $(document).ready(function() {
+          var loginlink = document.getElementById('login');
+          loginlink.addEventListener('click', 
+              function() { window.parent.location.href = '/portal/auth/loginhandler.html?mypage=' + getPageToForward(); }, false);
+      });
+    </script>
+  </head>
+  <body>
+    <p>
+      <div class="infoblock">
+      <b><font color="red">You must be logged in with your institutional username and password to view this page.</font></b>
+      <br><br>
+        When you click on the "Log in" link below, you will be redirected to the the <b>Tuakiri New Zealand Access Federation</b> website.<br>
+        Select "Tuakiri New Zealand Access Federation" from the left-hand panel, the organisation at which you work or study
+        from the right-hand panel, and click the "Select" button.<br>
+        You will then be redirected to the login page of your organisation, where you need to sign in with your institutional username and password.
+      </div> 
+    </p>
+    <p>
+      <a id='login' href=''>Log in</a>
+    </p>
+  </body>
+</html>

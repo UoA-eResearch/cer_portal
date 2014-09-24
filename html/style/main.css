@@ -7,7 +7,7 @@ div#header {
   left:0;
   right:0;
   height:40px;
-  font-size:18pt;
+  font-size:16pt;
 }
 
 div#menu {
@@ -47,3 +47,10 @@ td {
   vertical-align:top
 }
 
+.infoblock{
+  color: #000;
+  background-color: #e0ecf3;
+  border: 2px solid #336699;
+  padding: 8px;
+  margin: 2px;
+}

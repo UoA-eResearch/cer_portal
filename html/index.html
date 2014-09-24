@@ -1,22 +1,48 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<html>
-
+<!--[if lt IE 9]> <html class="oldie"> <![endif]-->
+<!--[if (gt IE 8)|!(IE)]><!--> <html class=""> <!--<![endif]-->
   <head>
-    <link rel="stylesheet" href="style/main.css" type="text/css" media="print, screen"/>
-    <link rel="stylesheet" href="style/superfish.css" type="text/css" media="print, screen"/>
-    <script type="text/javascript" src="js/jquery-1.7.min.js"></script>
-    <script type="text/javascript" src="js/jquery.ba-hashchange.min.js"></script>
-    <script type="text/javascript" src="js/superfish.min.js"></script>
-
+    <meta http-equiv="X-UA-Compatible" content="IE=9; IE=8; IE=7; IE=EmulateIE9" /> 
+    <link rel="stylesheet" href="/portal/style/main.css" type="text/css" media="print, screen"/>
+    <link rel="stylesheet" href="/portal/style/superfish.css" type="text/css" media="print, screen"/>
+    <script type="text/javascript" src="/portal/js/jquery-1.7.min.js"></script>
+    <script type="text/javascript" src="/portal/js/jquery.ba-hashchange.min.js"></script>
+    <script type="text/javascript" src="/portal/js/superfish.min.js"></script>
     <script type="text/javascript">
 
       var reload = true;
 
       // adjust size of main div when browser window is resized
       function adjust_main_div() {
-        var height = parseInt($(window).height() - $('#header').height() - $('#menu').height());
-        $('#main').height(height);
+          var height = parseInt($(window).height() - $('#header').height() - $('#menu').height());
+          $('#main').height(height);
       } 
+     
+      function set_url_cookie(url) {
+          var d = new Date();
+          d.setTime(d.getTime() + 20000);
+          var expires = "expires=" + d.toUTCString();
+          document.cookie = "url=" + url + "; " + expires;
+      } 
+
+      function delete_url_cookie(url) {
+          document.cookie = "url=; expires=Thu, 01 Jan 1970 00:00:00 UTC"; 
+      } 
+
+      function get_url_cookie() {
+          var name = "url=";
+          var ca = document.cookie.split(';');
+          for(var i=0; i<ca.length; i++) {
+              var c = ca[i];
+              while (c.charAt(0)==' ') {
+                  c = c.substring(1);
+              }
+              if (c.indexOf(name) != -1) {
+                  return c.substring(name.length,c.length);
+              }
+          }
+          return "";
+      }
 
       /*
        * load page into a new iframe: create new iframe for each page that is visited either
@@ -26,27 +52,55 @@
        * save state in hash in querystring hash to enable bookmarking.
        */
       function load_page_into_iframe(url) {
+         if (url.indexOf("/") != 0) {
+           url = '/' + url;
+         } 
+         set_url_cookie(url);
+
          var onloadCount = 0;
          var ifr = document.createElement("iframe");
-         ifr.src = url;
          ifr.frameBorder = "0";
          ifr.seamless= "seamless";
          ifr.width = "100%";
          ifr.height = "100%";
+         ifr.id = 'myiframe';
+         ifr.src = url;
+
          ifr.onload = function() { 
            onloadCount += 1;
-           /*
-            * make the link available in hash in querystring if the url changed within the iframe,
-            * e.g. by clicking on a link on the page loaded in the frame.
-            * onloadCount is > 1 in that case (onload is called once on the initial load).
-            * don't cause the iframe to be recreated in that case.
-            */
-           if (onloadCount > 1) {
-              var tmp = document.createElement("a");
-              tmp.href = this.contentWindow.location.href;
-              reload = false;
-              window.location.hash = '#' + tmp.pathname + tmp.search;
-           } 
+   
+           try {
+             if (onloadCount < 2) {
+               var links = document.getElementById('myiframe').contentWindow.document.getElementsByTagName("a");
+               for (var i = 0; i < links.length; i++) {
+                 // Firefox, Chrome, Safari, IE 9,10
+                 links[i].addEventListener('click', function() {
+                     var tmp = document.createElement("a");
+                     tmp.href = this.href;
+                     delete_url_cookie();
+                     set_url_cookie(tmp.pathname + tmp.search);
+                   }, true);
+               }
+             } else {
+               /*
+                * make the link available in hash in querystring if the url changed within the iframe,
+                * e.g. by clicking on a link on the page loaded in the frame.
+                * onloadCount is > 1 in that case (onload is called once on the initial load).
+                * don't cause the iframe to be recreated in that case.
+                */
+                var tmp = document.createElement("a");
+                tmp.href = this.contentWindow.location.href;
+                reload = false;
+                window.location.hash = '#' + tmp.pathname + tmp.search;
+             }
+           } catch (err) {
+             document.getElementById("main").innerHTML = "Redirecting to login page...";
+             c = get_url_cookie();
+             delete_url_cookie();
+             url = '/portal/login.html?mypage=' + c; 
+             reload = true;
+             window.location.hash = "#" + url;
+           }
          }
 
          var myDiv = document.getElementById("main");
@@ -58,22 +112,35 @@
          reload = false;
          window.location.hash = '#' + url;
       }
-
+      
       // refresh a page in iframe
       function refresh() {
         if (window.location.hash.match(new RegExp('heatmap.cgi$'))) { 
-          load_page_into_iframe('/portal/auth/hpc/cgi-bin/noheader/heatmap.cgi');
+          load_page_into_iframe('/portal/hpc/cgi-bin/noheader/heatmap.cgi');
         }
+      }
+
+      function getPageToForward() {
+        return window.location.search.substring(8);
       }
 
       // things to do when the page has been loaded
       $(document).ready(function() {
 
+        if ($('html').is('.oldie')) {
+            alert("Certain functionality in this website doesn't work in the version of Internet Explorer you are using. " +
+                  "It is recommended that you switch to a different browser, like Firefox, Chrome, or Opera.");
+        }
+
         adjust_main_div();
 
-        // load page defined in hash into iframe, if any hash is defined
         if (location.hash === '') {
-          load_page_into_iframe('/portal/welcome.html');
+          p = getPageToForward();
+          if (typeof p != 'undefined' && p != '') {
+            window.location.href = '/portal/auth/#' + p;
+          } else {
+            load_page_into_iframe('/portal/welcome.html');
+          }
         } else {
           load_page_into_iframe(location.hash.substr(1));
         }
@@ -85,12 +152,12 @@
         $('#project-request').click(function(){ load_page_into_iframe('/portal/auth/cerproject/html/request_project'); return false; });
         $('#project-membership-request').click(function(){ load_page_into_iframe('/portal/auth/cerproject/html/request_membership'); return false; });
         $('#cluster-account').click(function(){ load_page_into_iframe('/portal/auth/ceraccount/html/view_account'); return false; });
-        $('#cluster-status_summary').click(function(){ load_page_into_iframe('/portal/auth/hpc/cgi-bin/noheader/summary.cgi'); return false; });
-        $('#cluster-status_runningjobs').click(function(){ load_page_into_iframe('/portal/auth/hpc/cgi-bin/noheader/showq.cgi?type=Running'); return false; });
-        $('#cluster-status_queuedjobs').click(function(){ load_page_into_iframe('/portal/auth/hpc/cgi-bin/noheader/showq.cgi?type=Queued'); return false; });
-        $('#cluster-status_heatmaps').click(function(){ load_page_into_iframe('/portal/auth/hpc/cgi-bin/noheader/heatmap.cgi'); return false; });
-        $('#cluster-status_clustertop').click(function(){ load_page_into_iframe('/portal/auth/hpc/cgi-bin/noheader/clustertop.cgi'); return false; });
-        $('#cluster-status_nodeoverview').click(function(){ load_page_into_iframe('/portal/auth/hpc/cgi-bin/noheader/shownode.cgi'); return false; });
+        $('#cluster-status_summary').click(function(){ load_page_into_iframe('/portal/hpc/cgi-bin/noheader/summary.cgi'); return false; });
+        $('#cluster-status_runningjobs').click(function(){ load_page_into_iframe('/portal/hpc/cgi-bin/noheader/showq.cgi?type=Running'); return false; });
+        $('#cluster-status_queuedjobs').click(function(){ load_page_into_iframe('/portal/hpc/cgi-bin/noheader/showq.cgi?type=Queued'); return false; });
+        $('#cluster-status_heatmaps').click(function(){ load_page_into_iframe('/portal/hpc/cgi-bin/noheader/heatmap.cgi'); return false; });
+        $('#cluster-status_clustertop').click(function(){ load_page_into_iframe('/portal/hpc/cgi-bin/noheader/clustertop.cgi'); return false; });
+        $('#cluster-status_nodeoverview').click(function(){ load_page_into_iframe('/portal/hpc/cgi-bin/noheader/shownode.cgi'); return false; });
         $('#cluster-history_statistics').click(function(){ load_page_into_iframe('/portal/auth/cerjobaudit/html/statistics'); return false; });
         $('#cluster-history_auditrecords').click(function(){ load_page_into_iframe('/portal/auth/cerjobaudit/html/auditrecords'); return false; });
 
@@ -121,6 +188,7 @@
   </head>
 
   <body onresize="adjust_main_div()">
+
     <!-- header of the page. For positioning of div see stylesheet. -->
     <div id="header">
       <div class="heading">University of Auckland &#10147; Centre for eResearch &#10147; Portal</div>
@@ -158,8 +226,17 @@
       </ul>
     </div>
 
+
     <!-- this is where the main pages are loaded into. For positioning of div see stylesheet. -->
     <div id="main">
+      <noscript>
+        <p>
+          <font color="red">
+            Your browser has JavaScript support turned off.<br> 
+            In order to use this page, you have to turn JavaScript support on.
+          </font>
+        </p>
+      </noscript>
     </div>
 
   </body>
