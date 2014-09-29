@@ -9,6 +9,9 @@
     <script type="text/javascript">
 
       function getPageToForward() {
+        // the first query string param is a random string, to avoid 
+        // chromes apparently aggressive caching behaviour
+        // see login.html for how the call to logginhandler.html is generated
         return window.location.search.substring(16);
       }
 
