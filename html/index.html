@@ -158,6 +158,7 @@
         $('#cluster-status_clustertop').click(function(){ load_page_into_iframe('/portal/hpc/cgi-bin/noheader/clustertop.cgi'); return false; });
         $('#cluster-status_nodeoverview').click(function(){ load_page_into_iframe('/portal/hpc/cgi-bin/noheader/shownode.cgi'); return false; });
         $('#cluster-history_statistics').click(function(){ load_page_into_iframe('/portal/auth/cerjobaudit/html/statistics'); return false; });
+        $('#cluster-history_simplestatistics').click(function(){ load_page_into_iframe('/portal/cerjobaudit/html/simplestatistics'); return false; });
         $('#cluster-history_auditrecords').click(function(){ load_page_into_iframe('/portal/auth/cerjobaudit/html/auditrecords'); return false; });
 
         // initialize menu
@@ -219,6 +220,7 @@
         <li><a id="cluster-history">Cluster History</a>
           <ul>
             <li><a id="cluster-history_statistics" href="#">Job Statistics</a></li>
+            <li><a id="cluster-history_simplestatistics" href="#">Job Statistics (affiliation only, no authentication)</a></li>
             <li><a id="cluster-history_auditrecords" href="#">Detailed Job History</a></li>
           </ul>
         </li>
